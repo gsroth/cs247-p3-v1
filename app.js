@@ -8,12 +8,12 @@ var bodyParser = require('body-parser');
 
 var routes = require('./routes');
 var users = require('./routes/user');
-
 var app = express();
 
 // enable sockiet io support
 var server = http.createServer(app);
 var io = require('socket.io').listen(server);
+var chat = require('./routes/chat')(io);
 server.listen(3000);
 
 // view engine setup
@@ -31,6 +31,29 @@ app.use(app.router);
 
 app.get('/', routes.index);
 app.get('/users', users.list);
+
+
+/* Socket io notes
+// using rooms https://github.com/LearnBoost/socket.io/wiki/Rooms
+// send to current request socket client
+socket.emit('message', "this is a test");
+
+// sending to all clients, include sender
+io.sockets.emit('message', "this is a test");
+
+// sending to all clients except sender
+socket.broadcast.emit('message', "this is a test");
+
+// sending to all clients in 'game' room(channel) except sender
+socket.broadcast.to('game').emit('message', 'nice game');
+
+// sending to all clients in 'game' room(channel), include sender
+io.sockets.in('game').emit('message', 'cool game');
+
+// sending to individual socketid
+io.sockets.socket(socketid).emit('message', 'for your eyes only');
+*/
+
 
 /// catch 404 and forwarding to error handler
 app.use(function(req, res, next) {
