@@ -5,3 +5,8 @@ body {
 a {
   color: #00B7FF;
 }
+#webcam_stream {
+  position: fixed;
+  top: 0;
+  right: 0;
+}
