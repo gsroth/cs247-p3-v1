@@ -5,7 +5,8 @@ $(document).ready(function(){
 });
 
 function connect_to_chat(){
-  socket = io.connect('http://localhost:3000');
+  //socket = io.connect('http://localhost:3000');
+  socket = io.connect(document.location.origin);
   socket.on('connected',function (data){
     var username = window.prompt("username?");
     if(username){
