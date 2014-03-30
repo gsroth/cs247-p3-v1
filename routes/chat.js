@@ -20,6 +20,7 @@ io.sockets.socket(socketid).emit('message', 'for your eyes only');
 */
 module.exports = function(io){
   var current_users = {};
+  io.set('log level', 1);
   io.sockets.on('connection',function(socket){
     socket.emit('connected',{m:'ok'});
 
