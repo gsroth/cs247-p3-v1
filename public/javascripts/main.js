@@ -154,16 +154,15 @@ var has_emotions = function(msg){
 
 // some handy methods for converting blob to base 64 and vice versa
 // for performance bench mark, please refer to http://jsperf.com/blob-base64-conversion/5
+// note useing String.fromCharCode.apply can cause callstack error
 var blob_to_base64 = function(blob, callback) {
   var reader = new FileReader();
   reader.onload = function() {
-    var buffer = reader.result;
-    var view = new Uint8Array(buffer);
-    var binary = String.fromCharCode.apply(window, view);
-    var base64 = btoa(binary);
+    var dataUrl = reader.result;
+    var base64 = dataUrl.split(',')[1];
     callback(base64);
   };
-  reader.readAsArrayBuffer(blob);
+  reader.readAsDataURL(blob);
 };
 
 var base64_to_blob = function(base64) {
