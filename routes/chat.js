@@ -26,23 +26,26 @@ module.exports = function(io){
 
     socket.on('new_user',function(data){
       console.log('new user connected: '+ data.username);
-      current_users[socket.id] = data.username;
-      io.sockets.emit('to_all',{m:data.username+' joined the room.',t:'grey'});
+      current_users[socket.id] = {
+        name: data.username,
+        color: "#"+((1<<24)*Math.random()|0).toString(16)
+      }
+      io.sockets.emit('to_all',{m:data.username+' joined the room.',c:'#eee'});
     });
 
     socket.on('user_msg',function(data){
-      username = current_users[socket.id];
-      io.sockets.emit('to_all',{m:username+': '+data.m});
+      user = current_users[socket.id];
+      io.sockets.emit('to_all',{m:user.name+': '+data.m,c:user.color});
     });
 
     socket.on('user_vid',function(data){
-      username = current_users[socket.id];
-      io.sockets.emit('to_all',{m:username,v:data.v});
+      user = current_users[socket.id];
+      io.sockets.emit('to_all',{m:user.name+": "+data.m,v:data.v,c:user.color});
     });
 
     socket.on('disconnect',function(){
-      username = current_users[socket.id];
-      io.sockets.emit('to_all',{m:username+' left the room.'});
+      user = current_users[socket.id];
+      io.sockets.emit('to_all',{m:user.name+' left the room.',c:'#eee'});
     });
   });
 }

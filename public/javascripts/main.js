@@ -8,13 +8,13 @@ function connect_to_chat(){
   //socket = io.connect('http://localhost:3000');
   socket = io.connect(document.location.origin);
   socket.on('connected',function (data){
-    var username = window.prompt("username?");
+    var username = window.prompt("Welcome, warrior! please declare your name?");
     if(username){
       socket.emit('new_user', { username: username });
     }else{
       socket.emit('new_user', { username: "anonymous"+Math.floor(Math.random()*1111) });
     }
-    bind_submission();
+    bind_submission_box();
     connect_webcam();
   });
   socket.on('to_all', function (data) {
@@ -24,27 +24,35 @@ function connect_to_chat(){
 }
 
 function display_msg(data){
-  $("#conversation").append("<div class='msg'>"+data.m+"</div>");
+  $("#conversation").append("<div class='msg' style='color:"+data.c+"'>"+data.m+"</div>");
   if(data.v){
     var source = document.createElement("source");
     source.src =  URL.createObjectURL(base64_to_blob(data.v));
     source.type =  "video/webm";
     var video = document.createElement("video");
     video.autoplay = true;
-    video.controls = true; // optional
-    video.class = "hidden";
+    video.controls = false; // optional
+    video.loop = true;
+    video.width = 120;
     video.appendChild(source);
     document.getElementById("conversation").appendChild(video);
   }
+  // scroll to bottom of div
+  setTimeout(function(){
+    $("html, body").animate({ scrollTop: $(document).height() }, 200);
+  },0);
 }
 
-function bind_submission(){
+function bind_submission_box(){
   $("#submission input").keydown(function( event ) {
     if (event.which == 13) {
-      socket.emit('user_msg', {m:$(this).val()});
-    }
-    if($(this).val() == "lol"){
-      socket.emit('user_vid', {v:cur_video_blob});
+      if(has_emotions($(this).val())){
+        alert("emit")
+        socket.emit('user_vid', {m:$(this).val(),v:cur_video_blob});
+      }else{
+        socket.emit('user_msg', {m:$(this).val()});
+      }
+      $(this).val("");
     }
   });
 }
@@ -85,19 +93,20 @@ function connect_webcam(){
 
     mediaRecorder.mimeType = 'video/webm';
     //mediaRecorder.mimeType = 'image/gif';
-    mediaRecorder.video_width = video_width;
-    mediaRecorder.video_height = video_height;
+    mediaRecorder.video_width = video_width/2;
+    mediaRecorder.video_height = video_height/2;
 
     mediaRecorder.ondataavailable = function (blob) {
-        // POST/PUT "Blob" using FormData/XHR2
         console.log("new data available!");
         video_container.innerHTML = "";
-        blob_to_b64(blob,function(b64_data){
+
+        // convert data into base 64 blocks
+        blob_to_base64(blob,function(b64_data){
           cur_video_blob = b64_data;
         });
 
 
-        // display
+        // if you want to display the captured frame
 
         // for href
         // var a = document.createElement('a');
@@ -133,7 +142,19 @@ function connect_webcam(){
   navigator.getUserMedia(mediaConstraints, onMediaSuccess, onMediaError);
 }
 
- var blob_to_b64 = function(blob, callback) {
+var has_emotions = function(msg){
+  var options = ["lol",": )",": ("];
+  for(var i=0;i<options.length;i++){
+    if(msg.indexOf(options[i])!= -1){
+      return true;
+    }
+  }
+  return false;
+}
+
+// some handy methods for converting blob to base 64 and vice versa
+// for performance bench mark, please refer to http://jsperf.com/blob-base64-conversion/5
+var blob_to_base64 = function(blob, callback) {
   var reader = new FileReader();
   reader.onload = function() {
     var buffer = reader.result;
@@ -156,3 +177,5 @@ var base64_to_blob = function(base64) {
   var blob = new Blob([view]);
   return blob;
 };
+
+
