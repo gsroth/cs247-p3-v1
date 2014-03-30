@@ -18,7 +18,7 @@ function connect_to_chat(){
     connect_webcam();
   });
   socket.on('to_all', function (data) {
-    console.log(data);
+    //console.log(data);
     display_msg(data)
   });
 }
@@ -47,7 +47,6 @@ function bind_submission_box(){
   $("#submission input").keydown(function( event ) {
     if (event.which == 13) {
       if(has_emotions($(this).val())){
-        alert("emit")
         socket.emit('user_vid', {m:$(this).val(),v:cur_video_blob});
       }else{
         socket.emit('user_msg', {m:$(this).val()});
@@ -93,11 +92,12 @@ function connect_webcam(){
 
     mediaRecorder.mimeType = 'video/webm';
     //mediaRecorder.mimeType = 'image/gif';
+    // make recorded media smaller to save some traffic (80 * 60 pixels, 3*24 frames)
     mediaRecorder.video_width = video_width/2;
     mediaRecorder.video_height = video_height/2;
 
     mediaRecorder.ondataavailable = function (blob) {
-        console.log("new data available!");
+        //console.log("new data available!");
         video_container.innerHTML = "";
 
         // convert data into base 64 blocks
