@@ -35,3 +35,15 @@ a {
   padding: 15px;
   outline: none;
 }
+#waiting {
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  background: #292929;
+  color: white;
+  text-align: center;
+  padding: 50px 0;
+  z-index: 9999;
+}

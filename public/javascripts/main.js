@@ -16,6 +16,7 @@ function connect_to_chat(){
     }
     bind_submission_box();
     connect_webcam();
+    $("#waiting").remove();
   });
   socket.on('to_all', function (data) {
     //console.log(data);
