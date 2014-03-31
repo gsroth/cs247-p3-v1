@@ -1,3 +1,5 @@
+// for heroku users, note that it will downgrade connection to long pulling. see http://stackoverflow.com/questions/14175051/unexpected-response-code-503-in-chrome-perhaps-having-to-do-with-socket-io-o
+
 var express = require('express');
 var http = require('http');
 var path = require('path');
