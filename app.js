@@ -1,4 +1,4 @@
-// for heroku users, note that it will downgrade connection to long pulling. see http://stackoverflow.com/questions/14175051/unexpected-response-code-503-in-chrome-perhaps-having-to-do-with-socket-io-o
+// for heroku users, you have to enable websocket or it will downgrade to longpooling for the chat communication, which is much slower. see https://blog.heroku.com/archives/2013/10/8/websockets-public-beta for how to enable websocket, you're supposed to $ heroku labs:enable websockets -a myapp
 
 var express = require('express');
 var http = require('http');
