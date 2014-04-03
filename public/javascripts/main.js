@@ -1,26 +1,33 @@
+(function() {
 var socket = null;
-var cur_video_blob = null;
+var cur_videos = [];
+var username = null;
+
+var fb_instance = new Firebase("https://cs247ps3.firebaseio.com");
+var fb_chat_room_id;
+var url_segments = document.location.href.split("/#");
+if(url_segments[1]){
+    fb_chat_room_id = url_segments[1];
+}else{
+    fb_chat_room_id = Math.random().toString(36).substring(7);
+}
+
+var fb_new_chat_room = fb_instance.child('chatrooms').child(fb_chat_room_id);
+var fb_instance_users = fb_new_chat_room.child('users');
+var fb_instance_stream = fb_new_chat_room.child('stream');
+var my_color = "#"+((1<<24)*Math.random()|0).toString(16);
+
+
 $(document).ready(function(){
-  connect_to_chat_firebase();
+  start_chat();
   //connect_to_chat();
 });
 
-function connect_to_chat_firebase(){
-  var fb_instance = new Firebase("https://cs247ps3.firebaseio.com");
+function start_chat(){
 
   // generate new chatroom id or use existing id
-  var url_segments = document.location.href.split("/#");
-  if(url_segments[1]){
-    fb_chat_room_id = url_segments[1];
-  }else{
-    fb_chat_room_id = Math.random().toString(36).substring(7);
-  }
+  
   display_msg({m:"Share this url with your friend to join this chat: "+ document.location.origin+"/#"+fb_chat_room_id,c:"red"})
-
-  var fb_new_chat_room = fb_instance.child('chatrooms').child(fb_chat_room_id);
-  var fb_instance_users = fb_new_chat_room.child('users');
-  var fb_instance_stream = fb_new_chat_room.child('stream');
-  var my_color = "#"+((1<<24)*Math.random()|0).toString(16);
 
   // listen to events
   fb_instance_users.on("child_added",function(snapshot){
@@ -31,7 +38,7 @@ function connect_to_chat_firebase(){
   });
 
   // block until username is answered
-  var username = window.prompt("Welcome, warrior! please declare your name?");
+  username = window.prompt("Welcome, warrior! please declare your name");
   if(!username){
     username = "anonymous"+Math.floor(Math.random()*1111);
   }
@@ -41,11 +48,7 @@ function connect_to_chat_firebase(){
   // bind submission box
   $("#submission input").keydown(function( event ) {
     if (event.which == 13) {
-      if(has_emotions($(this).val())){
-        fb_instance_stream.push({m:username+": " +$(this).val(), v:cur_video_blob, c: my_color});
-      }else{
-        fb_instance_stream.push({m:username+": " +$(this).val(), c: my_color});
-      }
+      fb_instance_stream.push({m:username+": " +$(this).val(), c: my_color});
       $(this).val("");
       scroll_to_bottom(0);
     }
@@ -79,42 +82,6 @@ function scroll_to_bottom(wait_time){
   },wait_time);
 }
 
-// used for node js backend
-// function bind_submission_box(){
-//   $("#submission input").keydown(function( event ) {
-//     if (event.which == 13) {
-//       if(has_emotions($(this).val())){
-//         socket.emit('user_vid', {m:$(this).val(),v:cur_video_blob});
-//       }else{
-//         socket.emit('user_msg', {m:$(this).val()});
-//       }
-//       $(this).val("");
-//       scroll_to_bottom(0);
-//     }
-//   });
-// }
-
-// used for node js backend
-// function connect_to_chat(){
-//   //socket = io.connect('http://localhost:3000');
-//   socket = io.connect(document.location.origin);
-//   socket.on('connected',function (data){
-//     var username = window.prompt("Welcome, warrior! please declare your name?");
-//     if(username){
-//       socket.emit('new_user', { username: username });
-//     }else{
-//       socket.emit('new_user', { username: "anonymous"+Math.floor(Math.random()*1111) });
-//     }
-//     bind_submission_box();
-//     connect_webcam();
-//     $("#waiting").remove();
-//   });
-//   socket.on('to_all', function (data) {
-//     //console.log(data);
-//     display_msg(data)
-//   });
-// }
-
 function connect_webcam(){
   var mediaConstraints = {
     video: true,
@@ -138,11 +105,11 @@ function connect_webcam(){
     webcam_stream.appendChild(video);
 
     // counter
-    var time = 0;
-    var second_counter = document.getElementById('second_counter');
-    var second_counter_update = setInterval(function(){
-      second_counter.innerHTML = time++;
-    },1000);
+    // var time = 0;
+    // var second_counter = document.getElementById('second_counter');
+    // var second_counter_update = setInterval(function(){
+    //   second_counter.innerHTML = time++;
+    // },1000);
 
     // now record stream in 5 seconds interval
     var video_container = document.getElementById('video_container');
@@ -158,36 +125,35 @@ function connect_webcam(){
     mediaRecorder.ondataavailable = function (blob) {
         //console.log("new data available!");
         video_container.innerHTML = "";
+        var index = cur_videos.length;
+
+        var source = document.createElement("source");
+        source.src =  URL.createObjectURL(blob);
+        source.type =  "video/webm";
+        
+        var video = document.createElement("video");
+        video.autoplay = true;
+        video.controls = false; // optional
+        video.loop = true;
+        video.width = 125;
+        video.appendChild(source);
+
+        var videoDiv = document.createElement("div");
+        videoDiv.className = "video-clip";
+        videoDiv.id = "video" + index;
+        videoDiv.appendChild(video);
+
+        videoDiv.onclick = add_video_to_chat;
+
+        $("#videos-scroll-pane").prepend(videoDiv);
 
         // convert data into base 64 blocks
         blob_to_base64(blob,function(b64_data){
-          cur_video_blob = b64_data;
+          var cur_video_blob = b64_data;
+          cur_videos[index] = cur_video_blob;
+
         });
 
-
-        // if you want to display the captured frame
-
-        // for href
-        // var a = document.createElement('a');
-        // a.target = '_blank';
-        // a.innerHTML = 'Open Recorded Video No. ' + (index++);
-        // a.href = URL.createObjectURL(blob);
-        // video_container.appendChild(a);
-
-        // for video
-        // var source = document.createElement("source");
-        // source.src =  URL.createObjectURL(blob);
-        // source.type =  "video/webm";
-        // var video = document.createElement("video");
-        // video.autoplay = true;
-        // video.class = "hidden";
-        // video.appendChild(source);
-        // video_container.appendChild(video);
-
-        // for gif
-        // var img = document.createElement('img');
-        // img.src = URL.createObjectURL(blob);
-        // video_container.appendChild(img);
     };
     mediaRecorder.start(3000);
     console.log("connect to media stream!");
@@ -195,6 +161,11 @@ function connect_webcam(){
 
   var onMediaError = function(e) {
     console.error('media error', e);
+  }
+
+  function add_video_to_chat() {
+    var index = parseInt(this.id.substring("video".length));
+    fb_instance_stream.push({m:username+": ", v:cur_videos[index], c: my_color});
   }
 
   // see https://github.com/streamproc/MediaStreamRecorder
@@ -236,4 +207,5 @@ var base64_to_blob = function(base64) {
   return blob;
 };
 
+})();
 

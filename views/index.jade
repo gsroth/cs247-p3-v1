@@ -1,11 +1,15 @@
 extends layout
 
 block content
-  div Welcome to #{title}, enable camera to post video emoji!
-  #waiting Connecting to chat server...
-  #second_counter
-  #conversation
-  #submission
-    input(placeholder="say something..")
-  #webcam_stream
-  #video_container
+  #content
+    #chat-pane
+      div Welcome to #{title}, enable camera to post video emoji!
+      #waiting Connecting to chat server...
+      #conversation
+      #submission
+        input(placeholder="say something..")
+      #webcam_stream
+      #video_container
+    #videos-pane 
+      p.information Select a video to send it!
+      #videos-scroll-pane
